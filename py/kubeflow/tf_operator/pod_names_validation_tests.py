@@ -20,11 +20,11 @@ def extract_job_specs(replica_specs):
     replica_specs: A dictionary having information of tfReplicaSpecs from manifest.
     returns: Dictionary. Key is tf job type and value is number of replicas.
   """
-  specs = dict()
-  for job_type in replica_specs:
-    specs[job_type.encode("ascii").lower()] = int(
-      replica_specs.get(job_type, {}).get("replicas", 0))
-  return specs
+  return {
+      job_type.encode("ascii").lower(): int(
+          replica_specs.get(job_type, {}).get("replicas", 0))
+      for job_type in replica_specs
+  }
 
 
 class PodNamesValidationTest(test_util.TestCase):
@@ -75,7 +75,7 @@ class PodNamesValidationTest(test_util.TestCase):
     # We are not able to guarantee pods selected with default namespace and job
     # name are only for this test run only. Therefore we only do partial check,
     # e.g. make sure expected set of pod names are in the selected pod names.
-    if not (expected_pod_names & actual_pod_names) == expected_pod_names:
+    if expected_pod_names & actual_pod_names != expected_pod_names:
       msg = "Actual pod names doesn't match. Expected: {0} Actual: {1}".format(
         str(expected_pod_names), str(actual_pod_names))
       logging.error(msg)

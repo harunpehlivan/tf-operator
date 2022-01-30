@@ -35,27 +35,23 @@ def verify_runconfig(master_host, namespace, job_name, replica, num_ps,
   """
   is_chief = True
   num_replicas = 1
-  if replica == "ps":
+  if replica == "evaluator":
+    is_chief = False
+
+  elif replica == "ps":
     is_chief = False
     num_replicas = num_ps
   elif replica == "worker":
     is_chief = False
     num_replicas = num_workers
-  elif replica == "evaluator":
-    is_chief = False
-
   # Construct the expected cluster spec
   chief_list = [
     "{name}-chief-0.{ns}.svc:2222".format(name=job_name, ns=namespace)
   ]
-  ps_list = []
-  for i in range(num_ps):
-    ps_list.append("{name}-ps-{index}.{ns}.svc:2222".format(
-      name=job_name, index=i, ns=namespace))
-  worker_list = []
-  for i in range(num_workers):
-    worker_list.append("{name}-worker-{index}.{ns}.svc:2222".format(
-      name=job_name, index=i, ns=namespace))
+  ps_list = ["{name}-ps-{index}.{ns}.svc:2222".format(
+      name=job_name, index=i, ns=namespace) for i in range(num_ps)]
+  worker_list = ["{name}-worker-{index}.{ns}.svc:2222".format(
+      name=job_name, index=i, ns=namespace) for i in range(num_workers)]
   # Evaluator is not part of training cluster.
   cluster_spec = {
     "chief": chief_list,
@@ -76,7 +72,7 @@ def verify_runconfig(master_host, namespace, job_name, replica, num_ps,
       "master": "grpc://{fs}:2222".format(fs=full_svc),
       "num_worker_replicas": num_workers + 1,  # Chief is also a worker
       "num_ps_replicas": num_ps,
-    } if not replica == "evaluator" else {
+    } if replica != "evaluator" else {
       # Evaluator has special config.
       "task_type": replica,
       "task_id": 0,

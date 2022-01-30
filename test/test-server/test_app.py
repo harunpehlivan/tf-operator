@@ -30,8 +30,7 @@ def tf_config():
 
 @APP.route("/runconfig", methods=['GET'])
 def run_config():
-  config = run_config_lib.RunConfig()
-  if config:
+  if config := run_config_lib.RunConfig():
     config_dict = {
       'master': config.master,
       'task_id': config.task_id,

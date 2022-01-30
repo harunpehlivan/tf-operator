@@ -28,14 +28,9 @@ def get_container_start_time(client, namespace, pod_selector, index, phase):
   logging.info("%s pods matched %s pods", len(pods.items), pod_selector)
   pod = pods.items[index]
 
-  if phase == "Running":
-    container_start_time = pod.status.container_statuses[
-      0].state.running.started_at
-  else:
-    container_start_time = pod.status.container_statuses[
-      0].state.terminated.started_at
-
-  return container_start_time
+  return (pod.status.container_statuses[0].state.running.started_at
+          if phase == "Running" else
+          pod.status.container_statuses[0].state.terminated.started_at)
 
 
 def log_pods(pods):
@@ -132,8 +127,7 @@ def wait_for_pods_to_be_deleted(
 def list_pods(client, namespace, label_selector):
   core = k8s_client.CoreV1Api(client)
   try:
-    pods = core.list_namespaced_pod(namespace, label_selector=label_selector)
-    return pods
+    return core.list_namespaced_pod(namespace, label_selector=label_selector)
   except rest.ApiException as e:
     message = ""
     if e.message:
@@ -182,14 +176,7 @@ def get_events(client, namespace, uid):
                       message)
     raise e
 
-  matching = []
-
-  for e in events.items:
-    if e.involved_object.uid != uid:
-      continue
-    matching.append(e)
-
-  return matching
+  return [e for e in events.items if e.involved_object.uid == uid]
 
 
 def parse_events(events):

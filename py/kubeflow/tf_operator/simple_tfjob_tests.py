@@ -59,10 +59,8 @@ class SimpleTfJobTests(test_util.TestCase):
       logging.error(self.failure)
       return
 
-    # Check for creation failures.
-    creation_failures = tf_job_client.get_creation_failures_from_tfjob(
-      api_client, self.namespace, results)
-    if creation_failures:
+    if creation_failures := tf_job_client.get_creation_failures_from_tfjob(
+        api_client, self.namespace, results):
       # TODO(jlewi): Starting with
       # https://github.com/kubeflow/tf-operator/pull/646 the number of events
       # no longer seems to match the expected; it looks like maybe events

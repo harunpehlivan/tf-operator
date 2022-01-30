@@ -74,7 +74,7 @@ def ks_deploy(app_dir, component, params, env=None, account=None):
   # and config can be submitted in the same pr.
   now = datetime.datetime.now()
   if not env:
-    env = "e2e-" + now.strftime("%m%d-%H%M-") + uuid.uuid4().hex[0:4]
+    env = "e2e-" + now.strftime("%m%d-%H%M-") + uuid.uuid4().hex[:4]
 
   logging.info("Using app directory: %s", app_dir)
 
@@ -318,9 +318,9 @@ def main():  # pylint: disable=too-many-locals
   parser_kubeflow.set_defaults(func=setup_kubeflow)
 
   parser_kubeflow.add_argument(
-    "--namespace",
-    default="kubeflow-" + now.strftime("%m%d-%H%M-") + uuid.uuid4().hex[0:4],
-    help="The directory containing the ksonnet app used for testing.",
+      "--namespace",
+      default="kubeflow-" + now.strftime("%m%d-%H%M-") + uuid.uuid4().hex[:4],
+      help="The directory containing the ksonnet app used for testing.",
   )
 
   parser_kubeflow.add_argument(

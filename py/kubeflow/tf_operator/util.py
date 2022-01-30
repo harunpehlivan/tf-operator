@@ -54,9 +54,7 @@ def run(command, cwd=None, env=None, dryrun=False):
     env.update(extra_envs)
     keys = sorted(env.keys())
 
-    lines = []
-    for k in keys:
-      lines.append("{0}={1}".format(k, env[k]))
+    lines = ["{0}={1}".format(k, env[k]) for k in keys]
     logging.info("Running: Environment:\n%s", "\n".join(lines))
 
   log_file = None
@@ -219,9 +217,7 @@ def create_cluster(gke, project, zone, cluster_request):
     logging.error("Exception occured creating cluster: %s, status: %s", e,
                   e.resp["status"])
     # Status appears to be a string.
-    if e.resp["status"] == '409':
-      pass
-    else:
+    if e.resp["status"] != '409':
       raise
 
 
@@ -422,10 +418,8 @@ def cluster_has_gpu_nodes(api_client):
   api = k8s_client.CoreV1Api(api_client)
   nodes = api.list_node()
 
-  for n in nodes.items:
-    if "cloud.google.com/gke-accelerator" in n.metadata.labels:
-      return True
-  return False
+  return any("cloud.google.com/gke-accelerator" in n.metadata.labels
+             for n in nodes.items)
 
 
 def setup_cluster(api_client):
@@ -473,9 +467,7 @@ def split_gcs_uri(gcs_uri):
   """Split a GCS URI into bucket and path."""
   m = GCS_REGEX.match(gcs_uri)
   bucket = m.group(1)
-  path = ""
-  if m.group(2):
-    path = m.group(2).lstrip("/")
+  path = m.group(2).lstrip("/") if m.group(2) else ""
   return bucket, path
 
 

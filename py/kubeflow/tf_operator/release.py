@@ -222,11 +222,10 @@ def build_operator_image(root_dir,
     if should_push:
       _push_image(image, latest_image)
 
-  output = {
+  return {
     "image": image,
     "commit": commit,
   }
-  return output
 
 
 def _push_image(image, latest_image):
@@ -235,14 +234,13 @@ def _push_image(image, latest_image):
     logging.info("Pushed image: %s", image)
 
     util.run(["gcloud", "docker", "--", "push", latest_image])
-    logging.info("Pushed image: %s", latest_image)
-
   else:
     util.run(["docker", "push", image])
     logging.info("Pushed image: %s", image)
 
     util.run(["docker", "push", latest_image])
-    logging.info("Pushed image: %s", latest_image)
+
+  logging.info("Pushed image: %s", latest_image)
 
 
 def build_and_push_artifacts(go_dir,

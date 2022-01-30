@@ -265,10 +265,7 @@ def get_labels(name, replica_type=None, replica_index=None):
 
 
 def to_selector(labels):
-  parts = []
-  for k, v in labels.iteritems():
-    parts.append("{0}={1}".format(k, v))
-
+  parts = ["{0}={1}".format(k, v) for k, v in labels.iteritems()]
   return ",".join(parts)
 
 
@@ -279,10 +276,10 @@ def get_pod_names(client, namespace, name):
   resp = core_api.list_namespaced_pod(
     namespace, label_selector=to_selector({TF_JOB_NAME_LABEL: name}))
   logging.info("list_namespaced_pod: %s", str(resp))
-  pod_names = []
-  for pod in resp.items:
-    if pod.metadata and pod.metadata.name:
-      pod_names.append(pod.metadata.name)
+  pod_names = [
+      pod.metadata.name for pod in resp.items
+      if pod.metadata and pod.metadata.name
+  ]
   return set(pod_names)
 
 
@@ -380,9 +377,8 @@ def get_creation_failures_from_tfjob(api_client, namespace, tfjob):
 
   num_expected = 0
   for replicakey in tfjob.get("spec", {}).get("tfReplicaSpecs", {}):
-    replica_spec = tfjob.get("spec", {}).get("tfReplicaSpecs", {}).get(
-      replicakey, {})
-    if replica_spec:
+    if (replica_spec := tfjob.get("spec", {}).get("tfReplicaSpecs", {}).get(
+        replicakey, {})):
       num_expected += replica_spec.get("replicas", 1)
 
   creation_failures = []

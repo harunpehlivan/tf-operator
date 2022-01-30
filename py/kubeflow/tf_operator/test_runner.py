@@ -24,17 +24,8 @@ def run_test(test_case, test_func, args):  # pylint: disable=too-many-branches,t
   """Run a test."""
   gcs_client = storage.Client(project=args.project)
   project = args.project
-  cluster_name = args.cluster
   zone = args.zone
-  # TODO(jlewi): When using GKE we should copy the .kube config and any other
-  # files to the test directory. We should then set the environment variable
-  # KUBECONFIG to point at that file. This should prevent us from having
-  # to rerun util.configure_kubectl on each step. Instead we could run it once
-  # as part of GKE cluster creation and store the config in the NFS directory.
-  # This would make the handling of credentials
-  # and KUBECONFIG more consistent between GKE and minikube and eventually
-  # this could be extended to other K8s deployments.
-  if cluster_name:
+  if cluster_name := args.cluster:
     util.configure_kubectl(project, zone, cluster_name)
   util.load_kube_config()
 
@@ -83,7 +74,7 @@ def run_test(test_case, test_func, args):  # pylint: disable=too-many-branches,t
 
 
 def parse_runtime_params(args):
-  salt = uuid.uuid4().hex[0:4]
+  salt = uuid.uuid4().hex[:4]
 
   if "environment" in args and args.environment:
     env = args.environment
@@ -97,7 +88,7 @@ def parse_runtime_params(args):
     if k == "name":
       name = v
 
-    if k == "namespace":
+    elif k == "namespace":
       namespace = v
 
   if not name:
@@ -189,10 +180,7 @@ def main(module=None):  # pylint: disable=too-many-locals
 
   args = parser.parse_args()
   test_module = import_module(module)
-  skip_tests = []
-  if args.skip_tests:
-    skip_tests = args.skip_tests.split(",")
-
+  skip_tests = args.skip_tests.split(",") if args.skip_tests else []
   types = dir(test_module)
   for t_name in types:
     t = getattr(test_module, t_name)
@@ -202,7 +190,7 @@ def main(module=None):  # pylint: disable=too-many-locals
       funcs = dir(test_case)
 
       for f in funcs:
-        if f.startswith("test_") and not f in skip_tests:
+        if f.startswith("test_") and f not in skip_tests:
           test_func = getattr(test_case, f)
           logging.info("Invoking test method: %s", test_func)
           run_test(test_case, test_func, args)

@@ -81,10 +81,7 @@ class TestSuiteTest(unittest.TestCase):
     c2_get = s.get("c2")
     self.assertEqual(200, c2_get.time)
 
-    names = set()
-
-    for c in s:
-      names.add(c.name)
+    names = {c.name for c in s}
 
     self.assertItemsEqual(["c1", "c2"], names)
 

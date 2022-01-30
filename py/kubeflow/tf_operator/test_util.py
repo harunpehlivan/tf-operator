@@ -60,7 +60,7 @@ class TestSuite(object):
     Raises:
       KeyError: If no test with that name exists.
     """
-    if not name in self._cases:
+    if name not in self._cases:
       raise KeyError("No TestCase named %s" % name)
     return self._cases[name]
 
@@ -141,8 +141,7 @@ def create_xml(test_cases):
       f.text = c.failure
       e.append(f)
 
-  t = ElementTree.ElementTree(root)
-  return t
+  return ElementTree.ElementTree(root)
 
 
 def create_junit_xml_file(test_cases, output_path, gcs_client=None):
@@ -173,12 +172,7 @@ def create_junit_xml_file(test_cases, output_path, gcs_client=None):
       try:
         os.makedirs(dir_name)
       except OSError as e:
-        if e.errno == errno.EEXIST:
-          # The path already exists. This is probably a race condition
-          # with some other test creating the directory.
-          # We should just be able to continue
-          pass
-        else:
+        if e.errno != errno.EEXIST:
           raise
     t.write(output_path)
 

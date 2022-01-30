@@ -39,8 +39,7 @@ class KubeFormSpawner(KubeSpawner):
     '''.format(registry, repoName)
 
     def options_from_form(self, formdata):
-        options = {}
-        options['image'] = formdata.get('image', [''])[0].strip()
+        options = {'image': formdata.get('image', [''])[0].strip()}
         options['cpu_guarantee'] = formdata.get(
             'cpu_guarantee', [''])[0].strip()
         options['mem_guarantee'] = formdata.get(
@@ -62,24 +61,27 @@ class KubeFormSpawner(KubeSpawner):
 
     @property
     def cpu_guarantee(self):
-        cpu = '500m'
-        if self.user_options.get('cpu_guarantee'):
-            cpu = self.user_options['cpu_guarantee']
-        return cpu
+        return (
+            self.user_options['cpu_guarantee']
+            if self.user_options.get('cpu_guarantee')
+            else '500m'
+        )
 
     @property
     def mem_guarantee(self):
-        mem = '1Gi'
-        if self.user_options.get('mem_guarantee'):
-            mem = self.user_options['mem_guarantee']
-        return mem
+        return (
+            self.user_options['mem_guarantee']
+            if self.user_options.get('mem_guarantee')
+            else '1Gi'
+        )
 
     @property
     def extra_resource_limits(self):
-        extra = ''
-        if self.user_options.get('extra_resource_limits'):
-            extra = json.loads(self.user_options['extra_resource_limits'])
-        return extra
+        return (
+            json.loads(self.user_options['extra_resource_limits'])
+            if self.user_options.get('extra_resource_limits')
+            else ''
+        )
 
 
 ###################################################
@@ -147,7 +149,7 @@ if pvc_mount and pvc_mount != 'null':
 # # Temporary fix:
 # # AKS / acs-engine doesn't yet use device plugin so we have to mount the drivers to use GPU
 # # TODO(wbuchwalter): Remove once device plugin is merged
-if cloud == 'aks' or cloud == 'acsengine':
+if cloud in ['aks', 'acsengine']:
     volumes.append({
         'name': 'nvidia',
         'hostPath': {

@@ -36,10 +36,7 @@ def get_gcs_output():
   """Return the GCS directory where test outputs should be written to."""
   job_name = os.getenv("JOB_NAME")
 
-  # GCS layout is defined here:
-  # https://github.com/kubernetes/test-infra/tree/master/gubernator#job-artifact-gcs-layout
-  pull_number = os.getenv("PULL_NUMBER")
-  if pull_number:
+  if pull_number := os.getenv("PULL_NUMBER"):
     output = ("gs://kubernetes-jenkins/pr-logs/pull/{owner}_{repo}/"
               "{pull_number}/{job}/{build}").format(
                 owner=GO_REPO_OWNER,
@@ -71,10 +68,9 @@ def get_symlink_output(pull_number, job_name, build_number):
   if not pull_number:
     # Symlinks are only created for pull requests.
     return ""
-  output = ("gs://kubernetes-jenkins/pr-logs/directory/"
+  return ("gs://kubernetes-jenkins/pr-logs/directory/"
             "{job}/{build}.txt").format(
               job=job_name, build=build_number)
-  return output
 
 
 def create_started(gcs_client, output_dir, sha):
@@ -100,8 +96,7 @@ def create_started(gcs_client, output_dir, sha):
     },
   }
 
-  PULL_REFS = os.getenv("PULL_REFS", "")
-  if PULL_REFS:
+  if PULL_REFS := os.getenv("PULL_REFS", ""):
     started["pull"] = PULL_REFS
 
   m = GCS_REGEX.match(output_dir)
@@ -126,9 +121,7 @@ def create_finished(gcs_client, output_dir, success):
   Returns:
     blob: The blob object that we created.
   """
-  result = "FAILURE"
-  if success:
-    result = "SUCCESS"
+  result = "SUCCESS" if success else "FAILURE"
   finished = {
     "timestamp": int(time.time()),
     "result": result,
@@ -184,14 +177,10 @@ def get_commit_from_env():
   # If this is a presubmit PULL_PULL_SHA will be set see:
   # https://github.com/kubernetes/test-infra/tree/master/prow#job-evironment-variables
   sha = ""
-  pull_number = os.getenv("PULL_NUMBER", "")
-
-  if pull_number:
-    sha = os.getenv("PULL_PULL_SHA", "")
+  if pull_number := os.getenv("PULL_NUMBER", ""):
+    return os.getenv("PULL_PULL_SHA", "")
   else:
-    sha = os.getenv("PULL_BASE_SHA", "")
-
-  return sha
+    return os.getenv("PULL_BASE_SHA", "")
 
 
 def create_latest(gcs_client, job_name, sha):
@@ -214,10 +203,10 @@ def create_latest(gcs_client, job_name, sha):
 
 
 def _get_actual_junit_files(bucket, prefix):
-  actual_junit = set()
-  for b in bucket.list_blobs(prefix=os.path.join(prefix, "junit")):
-    actual_junit.add(os.path.basename(b.name))
-  return actual_junit
+  return {
+      os.path.basename(b.name)
+      for b in bucket.list_blobs(prefix=os.path.join(prefix, "junit"))
+  }
 
 
 def check_no_errors(gcs_client, artifacts_dir, junit_files):
@@ -253,10 +242,7 @@ def check_no_errors(gcs_client, artifacts_dir, junit_files):
       logging.info("Test failures in %s", full_path)
       no_errors = False
 
-  # Check if there were any extra tests that ran and treat
-  # that as a failure.
-  extra = set(actual_junit) - set(junit_files)
-  if extra:
+  if extra := set(actual_junit) - set(junit_files):
     logging.error("Extra junit files found: %s", ",".join(extra))
     no_errors = False
   return no_errors

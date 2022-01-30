@@ -46,7 +46,7 @@ def run(server, cluster_spec):  # pylint: disable=too-many-statements, too-many-
   """
 
   # construct the graph and create a saver object
-  with tf.Graph().as_default():  # pylint: disable=not-context-manager
+  with tf.Graph().as_default():# pylint: disable=not-context-manager
     # The initial value should be such that type is correctly inferred as
     # float.
     width = 10
@@ -65,12 +65,7 @@ def run(server, cluster_spec):  # pylint: disable=too-many-statements, too-many-
 
     init_op = tf.global_variables_initializer()
 
-    if server:
-      target = server.target
-    else:
-      # Create a direct session.
-      target = ""
-
+    target = server.target if server else ""
     logging.info("Server target: %s", target)
     with tf.Session(
             target, config=tf.ConfigProto(log_device_placement=True)) as sess:

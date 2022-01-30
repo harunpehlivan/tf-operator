@@ -35,17 +35,10 @@ def run_lint(args):
   failed_files = []
   rc_file = os.path.join(args.src_dir, ".pylintrc")
   for root, dirs, files in os.walk(os.path.abspath(args.src_dir), topdown=True):
-    # excludes can be done with fnmatch.filter and complementary set,
-    # but it's more annoying to read.
-    exclude = False
-    for e in full_dir_excludes:
-      if root.startswith(e):
-        exclude = True
-        break
-    if exclude:
+    if exclude := any(root.startswith(e) for e in full_dir_excludes):
       continue
 
-    dirs[:] = [d for d in dirs]
+    dirs[:] = list(dirs)
     for pat in includes:
       for f in fnmatch.filter(files, pat):
         full_path = os.path.join(root, f)
